@@ -1,0 +1,28 @@
+{
+  "projectName": "MyAwesomeProject",
+  "pythonVersion": "3.9",
+  "virtualEnvName": "venv",
+  "requirementsFile": "requirements.txt",
+  "devRequirementsFile": "requirements-dev.txt",
+  "gitRepo": "https://github.com/username/my-awesome-project.git",
+  "additionalTools": [
+    "pre-commit",
+    "black",
+    "flake8",
+    "pytest",
+    "docker"
+  ],
+  "postSetupCommands": [
+    "echo 'Environment setup completed successfully!'",
+    "python -c 'print(\"Hello from MyAwesomeProject!\")'",
+    "git init",
+    "pre-commit install"
+  ],
+  "environmentVariables": {
+    "PYTHONPATH": ".",
+    "DEBUG": "True",
+    "DATABASE_URL": "sqlite:///dev.db",
+    "API_KEY": "your-api-key-here",
+    "ENVIRONMENT": "development"
+  }
+}

@@ -1,0 +1,49 @@
+# Cloud Pipeline Configuration Example
+# This file defines the configuration for a cloud pipeline
+
+name: "my-app-pipeline"
+platform: "aws"  # aws, azure, gcp
+region: "us-west-2"
+projectId: "my-project-id"  # Required for Azure/GCP
+resourceGroup: "my-resource-group"  # Required for Azure
+
+# Pipeline definition with stages
+pipelineDefinition:
+  source:
+    type: "CodeCommit"  # AWS: CodeCommit, S3 | Azure: AzureRepos | GCP: CloudSource
+    repository: "my-app-repo"
+    branch: "main"
+  
+  build:
+    type: "CodeBuild"  # AWS: CodeBuild | Azure: AzurePipelines | GCP: CloudBuild
+    projectName: "my-app-build"
+    buildSpec: "buildspec.yml"
+  
+  test:
+    type: "CodeBuild"
+    projectName: "my-app-test"
+    testSpec: "testspec.yml"
+  
+  deploy:
+    type: "ECS"  # AWS: ECS, EKS, Lambda | Azure: AKS, Container Instances | GCP: Cloud Run, GKE
+    clusterName: "my-app-cluster"
+    serviceName: "my-app-service"
+    imageTag: "latest"
+
+# Environment variables for the pipeline
+environmentVariables:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  DATABASE_URL: "postgresql://user:pass@host:5432/db"
+  API_KEY: "${API_KEY}"  # Will be replaced with actual value
+
+# Tags for resource management
+tags:
+  Environment: "production"
+  Project: "my-app"
+  Owner: "devops-team"
+  CostCenter: "engineering"
+
+# Pipeline settings
+timeout: 3600  # 1 hour in seconds
+retryCount: 3  # Number of retries on failure

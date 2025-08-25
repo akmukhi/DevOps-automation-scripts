@@ -1,0 +1,118 @@
+# Google Cloud Platform Pipeline Configuration Example
+
+name: "gcp-web-app-pipeline"
+platform: "gcp"
+region: "us-central1"
+projectId: "my-gcp-project"  # GCP Project ID
+
+# GCP-specific pipeline definition
+pipelineDefinition:
+  source:
+    type: "CloudSource"  # Cloud Source Repositories
+    repository: "my-web-app"
+    branch: "main"
+    triggerOnPush: true
+  
+  build:
+    type: "CloudBuild"
+    buildConfig: "cloudbuild.yaml"
+    buildSteps:
+      - name: "gcr.io/cloud-builders/docker"
+        args: ["build", "-t", "gcr.io/$PROJECT_ID/my-web-app:$COMMIT_SHA", "."]
+      - name: "gcr.io/cloud-builders/docker"
+        args: ["push", "gcr.io/$PROJECT_ID/my-web-app:$COMMIT_SHA"]
+      - name: "gcr.io/cloud-builders/docker"
+        args: ["tag", "gcr.io/$PROJECT_ID/my-web-app:$COMMIT_SHA", "gcr.io/$PROJECT_ID/my-web-app:latest"]
+      - name: "gcr.io/cloud-builders/docker"
+        args: ["push", "gcr.io/$PROJECT_ID/my-web-app:latest"]
+  
+  test:
+    type: "CloudBuild"
+    testConfig: "test-cloudbuild.yaml"
+    testSteps:
+      - name: "gcr.io/cloud-builders/go"
+        args: ["test", "./..."]
+      - name: "gcr.io/cloud-builders/npm"
+        args: ["test"]
+  
+  deploy:
+    type: "CloudRun"  # Cloud Run service
+    serviceName: "my-web-app"
+    imageTag: "latest"
+    region: "us-central1"
+    concurrency: 80
+    maxInstances: 10
+    minInstances: 1
+
+# GCP-specific environment variables
+environmentVariables:
+  GOOGLE_CLOUD_PROJECT: "my-gcp-project"
+  GOOGLE_CLOUD_REGION: "us-central1"
+  GOOGLE_CLOUD_ZONE: "us-central1-a"
+  CLOUD_SQL_INSTANCE: "my-sql-instance"
+  CLOUD_STORAGE_BUCKET: "my-app-storage"
+  PUBSUB_TOPIC: "my-app-events"
+
+# GCP-specific settings
+gcp:
+  projectId: "my-gcp-project"
+  region: "us-central1"
+  zone: "us-central1-a"
+  
+  # Service accounts
+  serviceAccounts:
+    - name: "pipeline-sa"
+      email: "pipeline@my-gcp-project.iam.gserviceaccount.com"
+      roles:
+        - "roles/cloudbuild.builds.builder"
+        - "roles/run.admin"
+        - "roles/storage.admin"
+  
+  # Cloud Build settings
+  cloudBuild:
+    timeout: "1800s"  # 30 minutes
+    machineType: "E2_HIGHCPU_8"
+    diskSizeGb: 100
+    substitutions:
+      _SERVICE_NAME: "my-web-app"
+      _REGION: "us-central1"
+  
+  # Cloud Run settings
+  cloudRun:
+    cpu: "1000m"
+    memory: "512Mi"
+    concurrency: 80
+    maxInstances: 10
+    minInstances: 1
+    timeout: "300s"
+    port: 8080
+  
+  # Monitoring and logging
+  monitoring:
+    enabled: true
+    metrics:
+      - "cloudrun.googleapis.com/request_count"
+      - "cloudrun.googleapis.com/request_latencies"
+    alerting:
+      - name: "high-error-rate"
+        condition: "error_rate > 0.05"
+        duration: "5m"
+  
+  logging:
+    level: "INFO"
+    format: "json"
+    destination: "cloud-logging"
+
+# Tags for GCP resources
+tags:
+  environment: "production"
+  project: "my-web-app"
+  owner: "devops-team"
+  cost-center: "engineering"
+  application: "web-app"
+
+# Pipeline settings
+timeout: 3600  # 1 hour
+retryCount: 3
+triggerOnPush: true
+triggerOnPullRequest: false

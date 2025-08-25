@@ -1,0 +1,76 @@
+# Azure DevOps Pipeline Configuration Example
+
+name: "azure-web-app-pipeline"
+platform: "azure"
+region: "East US"
+projectId: "my-azure-org"  # Azure DevOps organization
+resourceGroup: "my-project"  # Azure DevOps project
+
+# Azure-specific pipeline definition
+pipelineDefinition:
+  source:
+    type: "AzureRepos"
+    repository: "my-web-app"
+    branch: "main"
+    serviceConnection: "azure-service-connection"
+  
+  build:
+    type: "AzurePipelines"
+    buildDefinition: "my-web-app-build"
+    buildYaml: "azure-pipelines.yml"
+    agentPool: "ubuntu-latest"
+  
+  test:
+    type: "AzurePipelines"
+    testDefinition: "my-web-app-tests"
+    testYaml: "test-pipeline.yml"
+    coverageThreshold: 80
+  
+  deploy:
+    type: "AKS"  # Azure Kubernetes Service
+    clusterName: "my-aks-cluster"
+    namespace: "production"
+    serviceName: "my-web-app"
+    imageTag: "latest"
+    serviceConnection: "aks-service-connection"
+
+# Azure-specific environment variables
+environmentVariables:
+  AZURE_SUBSCRIPTION_ID: "${AZURE_SUBSCRIPTION_ID}"
+  AZURE_RESOURCE_GROUP: "my-resource-group"
+  AZURE_LOCATION: "East US"
+  AZURE_ACR_NAME: "myacr.azurecr.io"
+  AZURE_AKS_CLUSTER: "my-aks-cluster"
+  AZURE_KEY_VAULT: "my-key-vault"
+
+# Azure DevOps specific settings
+azureDevOps:
+  organization: "my-azure-org"
+  project: "my-project"
+  serviceConnections:
+    - name: "azure-service-connection"
+      type: "AzureRM"
+      subscriptionId: "${AZURE_SUBSCRIPTION_ID}"
+    - name: "aks-service-connection"
+      type: "kubernetes"
+      clusterName: "my-aks-cluster"
+  
+  variableGroups:
+    - name: "production-variables"
+      variables:
+        ENVIRONMENT: "production"
+        DATABASE_URL: "postgresql://user:pass@host:5432/prod_db"
+        API_BASE_URL: "https://api.example.com"
+
+# Tags for Azure resources
+tags:
+  Environment: "production"
+  Project: "my-web-app"
+  Owner: "devops-team"
+  CostCenter: "engineering"
+  Application: "web-app"
+
+# Pipeline settings
+timeout: 3600  # 1 hour
+retryCount: 3
+approvalRequired: false  # Require approval before deployment

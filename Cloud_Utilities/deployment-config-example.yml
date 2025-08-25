@@ -1,0 +1,83 @@
+# Deployment Configuration Example
+# This file defines the configuration for deploying a service
+
+serviceName: "my-web-app"
+imageTag: "v1.2.3"
+environment: "production"  # production, staging, development
+
+# Deployment settings
+replicas: 3  # Number of service replicas
+rollbackEnabled: true  # Enable automatic rollback on failure
+
+# Resource requirements
+resources:
+  cpu: "500m"  # CPU request (0.5 cores)
+  memory: "1Gi"  # Memory request (1 GB)
+  cpuLimit: "1000m"  # CPU limit (1 core)
+  memoryLimit: "2Gi"  # Memory limit (2 GB)
+
+# Health check configuration
+healthCheck:
+  path: "/health"  # Health check endpoint
+  port: 8080  # Health check port
+  initialDelaySeconds: 30  # Initial delay before first check
+  periodSeconds: 10  # How often to perform health check
+  timeoutSeconds: 5  # Timeout for health check
+  failureThreshold: 3  # Number of failures before marking unhealthy
+  successThreshold: 1  # Number of successes before marking healthy
+
+# Environment-specific variables
+environmentVariables:
+  NODE_ENV: "production"
+  PORT: "8080"
+  DATABASE_URL: "postgresql://user:pass@host:5432/prod_db"
+  REDIS_URL: "redis://redis-host:6379"
+  API_BASE_URL: "https://api.example.com"
+
+# Secrets (will be mounted as environment variables)
+secrets:
+  - name: "database-password"
+    key: "DB_PASSWORD"
+  - name: "api-key"
+    key: "API_KEY"
+
+# Volume mounts
+volumes:
+  - name: "config-volume"
+    mountPath: "/app/config"
+    configMap: "app-config"
+  - name: "logs-volume"
+    mountPath: "/app/logs"
+    persistentVolumeClaim: "logs-pvc"
+
+# Network configuration
+network:
+  port: 8080
+  targetPort: 8080
+  protocol: "HTTP"
+  ingress:
+    enabled: true
+    host: "my-app.example.com"
+    tls: true
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+# Scaling configuration
+scaling:
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Monitoring and logging
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    path: "/metrics"
+    port: 9090
+  logging:
+    level: "INFO"
+    format: "json"
+    output: "stdout"
