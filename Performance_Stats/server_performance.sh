@@ -67,10 +67,49 @@ mem_used_mb=$(free -h | awk '/^Mem:/ {print $3}')
 mem_percent=$(awk "BEGIN {printf \"%.2f\", ($mem_used_mb/$mem_total_mb)*100})
 
 echo -e "Total Memory: ${YELLOW}$mem_total"
-echo -e "Used Memory: ${RED}$mem_used${NC} (${RED}${mem_percent}%)"
+echo -e "Used Memory: ${RED}$mem_used (${RED}${mem_percent}%)"
 echo -e "Free Memory: ${GREEN}$mem_free"
 echo -e "Available Memory: ${GREEN}$mem_available"
 
 #Disk Usage
 print_header "DISK USAGE"
+
+df -h --output=source,fstype,size,used,avail,pcent,target -x tmpfs -x devtmpfs 2>/dev/null | while read -r line; do
+    if echo "$line" | grep -q "Filesystem"; then
+        echo -e "${YELLOW}$line"
+    else
+        percent=$(echo "$line" | awk '{print $(NF-1)}' | tr -d '%')
+        if [ "$percent -ge 75 ] 2>/dev/null; then
+            echo -e "${RED}$line"
+        elif [ "$percent" -ge 75 ] 2>/dev/null; then
+            echo -e "${YELLOW}$line"
+        else
+            echo -e "${GREEN}$line"
+        fi
+    fi
+done
+
+#Processes by CPU usage
+print_header "Top 5 Proccesses sorted by CPU Usage"
+
+echo -e "${YELLOW}%-10s %-10s %-10s %-s" "PID" "USER" "MEMORY" "COMMAND"
+ps aux --sort=-%mem | head -6 | tail -5 | awk '{printf "%-10s %-10s %-10s %-10s %s\n", $2, $1, $4, $11}'
+
+
+#Process Count
+print_header "Process Information"
+
+total_processes=$(ps aux | wc -l)
+running_processes=$(ps aux | grep -c " R ")
+sleeping_processes=$(ps aux | grep -c " S ")
+zombie_processes=$(ps aux | grep -c " Z ")
+
+echo -e "Total Processes: ${YELLOW}$total_processes"
+echo -e "Running: ${GREEN}$running_processes | Sleeping: ${BLUE}$sleeping_processes | Zombie: ${RED}$zombie_processes"
+
+
+#Footer
+
+echo -e "\n${GREEN} Analysis Complete"
+
 
